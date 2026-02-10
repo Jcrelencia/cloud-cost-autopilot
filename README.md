@@ -16,7 +16,7 @@ Cloud Cost Autopilot is a data dashboard that helps users monitor and optimize t
 
 ---
 
-## 📁 Project Structure
+##  Project Structure
 ```
 cloud-cost-autopilot/
 │
@@ -62,7 +62,7 @@ cloud-cost-autopilot/
 
 ---
 
-## 🚀 Getting Started
+##  Getting Started
 
 ### Prerequisites
 - Node.js (v18+)
@@ -72,77 +72,9 @@ cloud-cost-autopilot/
 
 ### Installation
 
-1. **Clone the repository**
-```bash
-   git clone https://github.com/Jcrelencia/cloud-cost-autopilot.git
-   cd cloud-cost-autopilot
-```
 
-2. **Set up the database**
-```bash
-   # Create database
-   createdb cloud_cost_autopilot
-   
-   # Run schema
-   psql cloud_cost_autopilot < database/schema.sql
-```
 
-3. **Install backend dependencies**
-```bash
-   cd server
-   npm install
-```
-
-4. **Install frontend dependencies**
-```bash
-   cd ../client
-   npm install
-```
-
-5. **Configure environment variables**
-   - Copy `.env.example` to `.env` in both `client/` and `server/`
-   - Fill in your database credentials and AWS keys
-
-6. **Run the development servers**
-```bash
-   # Terminal 1 - Backend
-   cd server
-   npm run dev
-   
-   # Terminal 2 - Frontend
-   cd client
-   npm start
-```
-
-7. **Open your browser**
-   - Frontend: http://localhost:3000
-   - Backend API: http://localhost:5000
-
----
-
-## 🎯 Features (Planned)
-
-### Phase 1: MVP (Week 3-5)
-- [ ] User authentication
-- [ ] AWS account connection
-- [ ] Cost overview dashboard
-- [ ] Basic cost visualization
-
-### Phase 2: Core Features (Week 6-8)
-- [ ] Detailed cost breakdown by service
-- [ ] Cost trend analysis
-- [ ] Savings recommendations engine
-- [ ] Alert system for unusual spending
-
-### Phase 3: Polish (Week 9-10)
-- [ ] Export reports (PDF/CSV)
-- [ ] Multi-account support
-- [ ] UI/UX improvements
-- [ ] Performance optimization
-
----
-
-## 🗄️ Database Schema
+## Database Schema
 
 ### Tables
 - **users** - User accounts
