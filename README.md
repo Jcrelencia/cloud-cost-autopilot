@@ -64,4 +64,4 @@ This capstone demonstrates:
 
 **Quarter:** Winter 2026 (CSS 497)  
 **Institution:** University of Washington Bothell  
-**Program:** Applied Computing
+**Program:** Computer Science Software Engineering
