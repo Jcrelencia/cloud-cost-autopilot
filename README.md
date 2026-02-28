@@ -10,10 +10,10 @@
 
 Explore my capstone project through these pages:
 
-- **[The User](docs/user-guide)** - What this project does and how it helps businesses save money
-- **[Capstone Experience](docs/technical-overview)** - Technical implementation, architecture, and how it evolved
-- **[Annotated Bibliography](docs/bibliography)** - Learning resources organized by theme
-- **[Overall Reflection](docs/reflection)** - My journey through the capstone experience
+- **[The User](docs/user-guide.md)** - What this project does and how it helps businesses save money
+- **[Capstone Experience](docs/technical-overview.md)** - Technical implementation, architecture, and how it evolved
+- **[Annotated Bibliography](docs/bibliography.md)** - Learning resources organized by theme
+- **[Overall Reflection](docs/reflection.md)** - My journey through the capstone experience
 
 ---
 
