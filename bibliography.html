@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Annotated Bibliography — Cloud Cost Autopilot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1a202c; }
+
+    nav {
+      background: white; border-bottom: 1px solid #e2e8f0;
+      padding: 0 40px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { font-size: 14px; font-weight: 700; color: #1a202c; text-decoration: none; }
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a { font-size: 13px; color: #718096; text-decoration: none; }
+    .nav-links a:hover, .nav-links a.active { color: #4299e1; }
+
+    .page { max-width: 680px; margin: 0 auto; padding: 60px 20px 80px; }
+
+    .back { display: inline-block; font-size: 13px; color: #718096; text-decoration: none; margin-bottom: 32px; }
+    .back:hover { color: #4299e1; }
+
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .lead { font-size: 15px; color: #718096; margin-bottom: 40px; line-height: 1.6; }
+
+    h2 {
+      font-size: 15px; font-weight: 700; color: #2d3748;
+      margin: 40px 0 6px; padding-top: 28px; border-top: 1px solid #e2e8f0;
+    }
+    h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+    .theme-desc {
+      font-size: 13px; color: #718096; margin-bottom: 20px; line-height: 1.7;
+    }
+
+    .entry { margin-bottom: 20px; }
+
+    .entry-title {
+      font-size: 13px; font-weight: 600; color: #2d3748; margin-bottom: 4px;
+    }
+
+    .entry-cite {
+      font-size: 12px; color: #a0aec0; margin-bottom: 6px; font-style: italic;
+    }
+
+    .entry-annotation {
+      font-size: 13px; color: #4a5568; line-height: 1.7;
+    }
+
+    footer { text-align: center; padding: 32px 20px; font-size: 12px; color: #a0aec0; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">Cloud Cost Autopilot</a>
+  <ul class="nav-links">
+    <li><a href="overall-capstone.html">Overall Capstone</a></li>
+    <li><a href="user.html">The User</a></li>
+    <li><a href="experience.html">Capstone Experience</a></li>
+    <li><a href="bibliography.html" class="active">Annotated Bibliography</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+  <a class="back" href="index.html">← Back to Home</a>
+
+  <h1>Annotated Bibliography</h1>
+  <p class="lead">Resources organized by theme that supported the research, design, and development of Cloud Cost Autopilot.</p>
+
+  <h2>AWS IAM & Security</h2>
+  <p class="theme-desc">Understanding IAM roles, trust relationships, and temporary credentials was essential for the secure AWS connection at the core of this project. These resources helped me implement AssumeRole correctly and debug permission errors.</p>
+
+  <div class="entry">
+    <div class="entry-title">AWS IAM Documentation — Roles and Temporary Credentials</div>
+    <div class="entry-cite">Amazon Web Services. (2024). AWS Identity and Access Management User Guide. https://docs.aws.amazon.com/IAM/latest/UserGuide/</div>
+    <div class="entry-annotation">The primary reference for understanding how IAM roles, trust policies, and AssumeRole work. Used extensively to debug "Access Denied" errors and correctly configure the trust relationship JSON that allows the application's IAM user to assume the CloudCostAutopilot role.</div>
+  </div>
+
+  <div class="entry">
+    <div class="entry-title">AWS STS AssumeRole API Reference</div>
+    <div class="entry-cite">Amazon Web Services. (2024). AWS Security Token Service API Reference. https://docs.aws.amazon.com/STS/latest/APIReference/</div>
+    <div class="entry-annotation">Referenced to understand the AssumeRole request parameters, credential expiration, and how to pass temporary credentials to other AWS SDK clients. Helped implement the one-hour session duration and credential refresh logic.</div>
+  </div>
+
+  <h2>AWS SDK & EC2 Integration</h2>
+  <p class="theme-desc">These resources supported the implementation of EC2 instance discovery and the AWS SDK v3 client configuration used throughout the backend.</p>
+
+  <div class="entry">
+    <div class="entry-title">AWS SDK for JavaScript v3 — Developer Guide</div>
+    <div class="entry-cite">Amazon Web Services. (2024). AWS SDK for JavaScript v3 Developer Guide. https://docs.aws.amazon.com/sdk-for-javascript/v3/developer-guide/</div>
+    <div class="entry-annotation">Used to learn the modular SDK v3 architecture, which differs significantly from v2. The guide helped set up client configuration with temporary credentials and understand the command pattern used for all AWS API calls in this project.</div>
+  </div>
+
+  <div class="entry">
+    <div class="entry-title">Amazon EC2 API — DescribeInstances</div>
+    <div class="entry-cite">Amazon Web Services. (2024). Amazon EC2 API Reference. https://docs.aws.amazon.com/AWSEC2/latest/APIReference/</div>
+    <div class="entry-annotation">Referenced to understand the structure of the DescribeInstances response and how to extract instance ID, type, state, and launch time from the nested Reservations array.</div>
+  </div>
+
+  <h2>CloudWatch Metrics</h2>
+  <p class="theme-desc">CloudWatch is the data source for all CPU utilization metrics in the project. These resources helped implement the metrics query and understand the statistical aggregation options.</p>
+
+  <div class="entry">
+    <div class="entry-title">Amazon CloudWatch — GetMetricStatistics</div>
+    <div class="entry-cite">Amazon Web Services. (2024). Amazon CloudWatch API Reference. https://docs.aws.amazon.com/AmazonCloudWatch/latest/APIReference/</div>
+    <div class="entry-annotation">Primary reference for implementing the CPU utilization query. Used to understand the Period, Statistics, Namespace, and Dimensions parameters needed to pull daily average CPU data for a specific EC2 instance over a 7-day window.</div>
+  </div>
+
+  <h2>Node.js & Express Backend</h2>
+  <p class="theme-desc">These resources supported the design and implementation of the REST API backend that connects the React frontend to the AWS services and PostgreSQL database.</p>
+
+  <div class="entry">
+    <div class="entry-title">Express.js Documentation</div>
+    <div class="entry-cite">OpenJS Foundation. (2024). Express.js Guide. https://expressjs.com/en/guide/</div>
+    <div class="entry-annotation">Used to structure the backend routes, middleware, and error handling. The guide informed the controller/route/service architecture pattern used throughout the project.</div>
+  </div>
+
+  <div class="entry">
+    <div class="entry-title">node-postgres (pg) Documentation</div>
+    <div class="entry-cite">Brianc. (2024). node-postgres documentation. https://node-postgres.com/</div>
+    <div class="entry-annotation">Referenced to set up the PostgreSQL connection pool and write parameterized queries. Parameterized queries were used throughout to prevent SQL injection vulnerabilities.</div>
+  </div>
+
+  <h2>React Frontend</h2>
+  <p class="theme-desc">These resources supported the development of the React dashboard, including component architecture, state management, and API integration.</p>
+
+  <div class="entry">
+    <div class="entry-title">React Documentation — Hooks and State Management</div>
+    <div class="entry-cite">Meta Platforms. (2024). React Documentation. https://react.dev/</div>
+    <div class="entry-annotation">Used to implement useState and useEffect hooks for managing recommendation data, scan status, and loading states in the dashboard component. The docs were particularly helpful for understanding async data fetching patterns in functional components.</div>
+  </div>
+
+  <h2>Cloud Cost Optimization</h2>
+  <p class="theme-desc">Background research on cloud cost management practices informed the product design and the choice to use 7-day average CPU as the primary idle detection metric.</p>
+
+  <div class="entry">
+    <div class="entry-title">AWS Cost Optimization Pillar — Well-Architected Framework</div>
+    <div class="entry-cite">Amazon Web Services. (2024). AWS Well-Architected Framework: Cost Optimization Pillar. https://docs.aws.amazon.com/wellarchitected/latest/cost-optimization-pillar/</div>
+    <div class="entry-annotation">This AWS whitepaper provided the conceptual foundation for the project. It defines right-sizing and idle resource detection as core cost optimization strategies, validating the approach of using CloudWatch CPU metrics to identify waste. The 5% CPU threshold used in the recommendation engine aligns with recommendations in this document.</div>
+  </div>
+
+  <div class="entry">
+    <div class="entry-title">AWS EC2 On-Demand Pricing — US East (Ohio)</div>
+    <div class="entry-cite">Amazon Web Services. (2024). Amazon EC2 On-Demand Pricing. https://aws.amazon.com/ec2/pricing/on-demand/</div>
+    <div class="entry-annotation">Used to build the EC2_PRICING lookup table in the recommendation service. The hourly rates for each instance type in us-east-2 are pulled directly from this page and used to calculate estimated monthly savings (hourly rate × 730 hours).</div>
+  </div>
+
+</div>
+
+<footer>CSS 497 Capstone · Jack Crelencia · University of Washington Bothell · Winter 2026</footer>
+
+</body>
+</html>

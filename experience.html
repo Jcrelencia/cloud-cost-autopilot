@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Capstone Experience — Cloud Cost Autopilot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1a202c; }
+
+    nav {
+      background: white; border-bottom: 1px solid #e2e8f0;
+      padding: 0 40px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { font-size: 14px; font-weight: 700; color: #1a202c; text-decoration: none; }
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a { font-size: 13px; color: #718096; text-decoration: none; }
+    .nav-links a:hover, .nav-links a.active { color: #4299e1; }
+
+    .page { max-width: 680px; margin: 0 auto; padding: 60px 20px 80px; }
+
+    .back { display: inline-block; font-size: 13px; color: #718096; text-decoration: none; margin-bottom: 32px; }
+    .back:hover { color: #4299e1; }
+
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .lead { font-size: 15px; color: #718096; margin-bottom: 40px; line-height: 1.6; }
+
+    h2 { font-size: 16px; font-weight: 600; color: #2d3748; margin: 40px 0 12px; padding-top: 24px; border-top: 1px solid #e2e8f0; }
+    h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+    p { font-size: 14px; color: #4a5568; line-height: 1.8; margin-bottom: 16px; }
+
+    .code-block {
+      background: #1a202c; border-radius: 8px; padding: 16px 20px;
+      margin: 16px 0; overflow-x: auto;
+    }
+    .code-block code {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      color: #a0aec0; line-height: 1.8; white-space: pre;
+    }
+    .code-block .kw { color: #76e4f7; }
+    .code-block .fn { color: #fbd38d; }
+    .code-block .str { color: #9ae6b4; }
+    .code-block .cm { color: #718096; }
+
+    .artifact {
+      background: white; border: 1px solid #e2e8f0; border-radius: 10px;
+      padding: 20px; margin: 20px 0;
+    }
+    .artifact-label {
+      font-size: 11px; font-weight: 600; letter-spacing: 1px;
+      text-transform: uppercase; color: #4299e1; margin-bottom: 8px;
+    }
+    .artifact p { margin-bottom: 0; }
+
+    .stack-row { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+    .tag {
+      background: #ebf8ff; border: 1px solid #bee3f8;
+      border-radius: 6px; padding: 4px 10px;
+      font-size: 12px; font-weight: 500; color: #2b6cb0;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    footer { text-align: center; padding: 32px 20px; font-size: 12px; color: #a0aec0; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">Cloud Cost Autopilot</a>
+  <ul class="nav-links">
+    <li><a href="overall-capstone.html">Overall Capstone</a></li>
+    <li><a href="user.html">The User</a></li>
+    <li><a href="experience.html" class="active">Capstone Experience</a></li>
+    <li><a href="bibliography.html">Annotated Bibliography</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+  <a class="back" href="index.html">← Back to Home</a>
+
+  <h1>Capstone Experience</h1>
+  <p class="lead">How Cloud Cost Autopilot was designed, built, and evolved over the quarter — from architecture decisions to debugging real AWS data.</p>
+
+  <h2>Architecture</h2>
+  <p>Cloud Cost Autopilot is a full-stack application with three layers: a React frontend, a Node.js/Express backend, and a PostgreSQL database. The backend communicates with AWS using three services — STS for role assumption, EC2 for instance discovery, and CloudWatch for CPU metrics.</p>
+  <div class="stack-row">
+    <span class="tag">React</span>
+    <span class="tag">Node.js</span>
+    <span class="tag">Express</span>
+    <span class="tag">PostgreSQL</span>
+    <span class="tag">AWS SDK v3</span>
+    <span class="tag">STS</span>
+    <span class="tag">EC2 API</span>
+    <span class="tag">CloudWatch</span>
+  </div>
+  <p>The decision to use IAM role assumption rather than storing AWS access keys was a deliberate security choice. Instead of holding long-term credentials, the system calls STS AssumeRole to get temporary credentials valid for one hour. This follows the principle of least privilege and means the application never has persistent access to any AWS account.</p>
+
+  <h2>AWS Integration</h2>
+  <p>Getting the AWS integration working with real credentials was the most challenging part of the project. The flow looks simple on paper — assume a role, list instances, pull metrics — but in practice it required understanding how IAM trust relationships work at the JSON policy level.</p>
+
+  <div class="artifact">
+    <div class="artifact-label">Artifact — CPU Metrics Function</div>
+    <p>This function pulls 7 days of CloudWatch CPU data for a single EC2 instance, averaging the daily datapoints to produce one number used by the recommendation engine.</p>
+  </div>
+
+  <div class="code-block"><code><span class="kw">async function</span> <span class="fn">getCPUUtilization</span>(credentials, instanceId, region) {
+  <span class="kw">const</span> endTime = <span class="kw">new</span> Date();
+  <span class="kw">const</span> startTime = <span class="kw">new</span> Date(endTime - <span class="str">7 * 24 * 60 * 60 * 1000</span>);
+
+  <span class="cm">// Pull daily averages over 7 days from CloudWatch</span>
+  <span class="kw">const</span> command = <span class="kw">new</span> <span class="fn">GetMetricStatisticsCommand</span>({
+    Namespace: <span class="str">'AWS/EC2'</span>,
+    MetricName: <span class="str">'CPUUtilization'</span>,
+    Period: <span class="str">86400</span>, <span class="cm">// 1 day in seconds</span>
+    Statistics: [<span class="str">'Average'</span>],
+    Dimensions: [{ Name: <span class="str">'InstanceId'</span>, Value: instanceId }],
+    StartTime: startTime,
+    EndTime: endTime,
+  });
+
+  <span class="kw">const</span> response = <span class="kw">await</span> cloudwatch.<span class="fn">send</span>(command);
+  <span class="kw">const</span> avgCPU = response.Datapoints
+    .<span class="fn">reduce</span>((sum, dp) => sum + dp.Average, <span class="str">0</span>)
+    / response.Datapoints.length;
+
+  <span class="kw">return</span> { averageCPU: avgCPU };
+}</code></div>
+
+  <h2>Recommendation Engine</h2>
+  <p>The recommendation engine translates raw CPU data into dollar amounts. It queries the database for all running instances with less than 5% average CPU over 7 days, then calculates estimated monthly savings using a pricing table of real AWS on-demand rates for us-east-2.</p>
+
+  <div class="artifact">
+    <div class="artifact-label">Artifact — Savings Calculation</div>
+    <p>The calculateMonthlySavings function takes an instance type, looks it up in the pricing table, and multiplies the hourly rate by 730 hours per month. A t2.micro at $0.0116/hr costs $8.47/month — money saved if the instance is stopped.</p>
+  </div>
+
+  <div class="code-block"><code><span class="kw">const</span> EC2_PRICING = {
+  <span class="str">'t2.micro'</span>: <span class="str">0.0116</span>,
+  <span class="str">'t2.small'</span>: <span class="str">0.0230</span>,
+  <span class="str">'t3.micro'</span>: <span class="str">0.0104</span>,
+  <span class="str">'m5.large'</span>: <span class="str">0.0960</span>,
+  <span class="cm">// ... more instance types</span>
+};
+
+<span class="kw">function</span> <span class="fn">calculateMonthlySavings</span>(instanceType) {
+  <span class="kw">const</span> hourlyRate = EC2_PRICING[instanceType] || <span class="str">0.05</span>;
+  <span class="kw">return</span> <span class="fn">parseFloat</span>((hourlyRate * <span class="str">730</span>).<span class="fn">toFixed</span>(<span class="str">2</span>));
+}</code></div>
+
+  <h2>Database Design</h2>
+  <p>PostgreSQL stores four core tables: users, aws_accounts, ec2_instances, and recommendations. The ec2_instances table stores the instance ID, type, state, region, and avg_cpu_7d — the averaged CloudWatch metric. The recommendations table links back to the account and stores the resource name, potential savings, and status (pending, applied, or dismissed).</p>
+  <p>A key bug early on came from account ID mismatches — instances were being saved under old account IDs while new scans queried different ones. Adding a debug endpoint to inspect the raw database rows helped trace the data flow and resolve it.</p>
+
+  <h2>Frontend Dashboard</h2>
+  <p>The React frontend went through two major iterations. The first version used a dark theme with animations and a sidebar. After getting feedback that it looked too complex for a first-quarter project, I rebuilt it with a clean white layout matching the original login screen design — purple gradient header, white cards, simple table.</p>
+
+  <div class="artifact">
+    <div class="artifact-label">Artifact — Dashboard (Final Version)</div>
+    <p>The dashboard shows potential monthly savings, pending/applied/dismissed counts, and a recommendations table with instance IDs, 7-day CPU averages, estimated savings, and action buttons. All data is live from the PostgreSQL database populated by real AWS scans.</p>
+  </div>
+
+  <h2>Stakeholder Feedback</h2>
+  <p>I met with Tyson Gong, a founder running a startup on AWS, to gather feedback on the project direction. His most important piece of feedback was direct: "Show me dollar amounts, not percentages." That single comment changed how the entire recommendation engine presents its output — leading with savings in dollars rather than CPU metrics.</p>
+</div>
+
+<footer>CSS 497 Capstone · Jack Crelencia · University of Washington Bothell · Winter 2026</footer>
+
+</body>
+</html>

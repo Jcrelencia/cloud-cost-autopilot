@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Overall Capstone — Cloud Cost Autopilot</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"/>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Inter', sans-serif; background: #f0f4f8; color: #1a202c; }
+
+    nav {
+      background: white; border-bottom: 1px solid #e2e8f0;
+      padding: 0 40px; height: 56px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .nav-brand { font-size: 14px; font-weight: 700; color: #1a202c; text-decoration: none; }
+    .nav-links { display: flex; gap: 24px; list-style: none; }
+    .nav-links a { font-size: 13px; color: #718096; text-decoration: none; }
+    .nav-links a:hover, .nav-links a.active { color: #4299e1; }
+
+    .page { max-width: 680px; margin: 0 auto; padding: 60px 20px 80px; }
+
+    .back { display: inline-block; font-size: 13px; color: #718096; text-decoration: none; margin-bottom: 32px; }
+    .back:hover { color: #4299e1; }
+
+    h1 { font-size: 28px; font-weight: 700; margin-bottom: 8px; }
+    .lead { font-size: 15px; color: #718096; margin-bottom: 40px; line-height: 1.6; }
+
+    h2 {
+      font-size: 16px; font-weight: 600; color: #2d3748;
+      margin: 40px 0 12px; padding-top: 28px; border-top: 1px solid #e2e8f0;
+    }
+    h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+
+    p { font-size: 14px; color: #4a5568; line-height: 1.8; margin-bottom: 16px; }
+    p:last-child { margin-bottom: 0; }
+
+    .highlight {
+      background: white; border: 1px solid #e2e8f0;
+      border-left: 4px solid #4299e1; border-radius: 8px;
+      padding: 16px 20px; margin: 20px 0;
+      font-size: 14px; color: #2d3748; line-height: 1.7; font-style: italic;
+    }
+
+    footer { text-align: center; padding: 32px 20px; font-size: 12px; color: #a0aec0; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-brand" href="index.html">Cloud Cost Autopilot</a>
+  <ul class="nav-links">
+    <li><a href="overall-capstone.html" class="active">Overall Capstone</a></li>
+    <li><a href="user.html">The User</a></li>
+    <li><a href="experience.html">Capstone Experience</a></li>
+    <li><a href="bibliography.html">Annotated Bibliography</a></li>
+  </ul>
+</nav>
+
+<div class="page">
+  <a class="back" href="index.html">← Back to Home</a>
+
+  <h1>Overall Capstone</h1>
+  <p class="lead">A reflective narrative of the full capstone experience — what I built, what broke, what I learned, and what I'd do differently.</p>
+
+  <h2>Why I Built This</h2>
+  <p>Cloud Cost Autopilot started from a simple observation: cloud bills are confusing, and most small businesses don't have a dedicated engineer to figure out why they're paying so much. I wanted to build something that actually solved a real problem, not just a tutorial project I'd throw away after the quarter. When I started researching the space, I found that tools like AWS Cost Explorer are powerful but overwhelming for someone who just wants to know what they're wasting money on. That gap became the foundation for this project.</p>
+  <p>Choosing a cloud cost optimization tool also felt personally relevant to where I want to go professionally. I've been interested in cloud engineering and AWS, and I knew that building something real with the AWS SDK, IAM roles, and CloudWatch would teach me more than any course could. The capstone felt like an opportunity to prove to myself — and to future employers — that I could build something meaningful from scratch.</p>
+  <p>The project also pushed me to think like a product engineer, not just a programmer. It's one thing to write code that works. It's another to build something that answers a question a real person would actually ask: "How much money am I wasting right now?"</p>
+
+  <h2>Learning AWS the Hard Way</h2>
+  <p>The most technically challenging part of this project was getting the AWS integration working with real credentials. In theory, the flow is straightforward: assume an IAM role, get temporary credentials, use those to call EC2 and CloudWatch APIs. In practice, it took a week of debugging permission errors before it worked.</p>
+  <p>The breakthrough came from understanding how IAM trust relationships work. My initial attempts kept returning "Access Denied" errors not because my code was wrong, but because the trust policy on my role wasn't configured to allow my user to assume it. Once I understood that the role needed to explicitly trust my IAM user through its trust relationship JSON, everything clicked.</p>
+  <div class="highlight">
+    "That experience taught me something no textbook had made clear: in AWS, security failures are silent by default. The API doesn't tell you what permission you're missing — you have to know enough to find it yourself."
+  </div>
+  <p>Getting CloudWatch CPU metrics working brought a similar challenge. Pulling raw datapoints and averaging them over seven days sounds simple, but handling missing data, empty responses, and instances that had just launched required careful error handling. I learned to write defensive code that could process partial data gracefully rather than crashing the whole scan.</p>
+
+  <h2>Building the Recommendation Engine</h2>
+  <p>The core intellectual challenge of this project was translating a raw technical metric — CPU utilization percentage — into something a small business owner actually cares about: dollars. That translation is what the recommendation engine does.</p>
+  <p>The logic is straightforward: pull each instance's seven-day average CPU, flag anything under 5% as idle, look up the instance type's hourly rate, multiply by 730 hours per month, and return estimated savings. But arriving at that design took iteration. Early on I was just flagging idle instances without any dollar amount attached.</p>
+  <p>When I met with my stakeholder Tyson Gong — who runs a small startup on AWS — his feedback was immediate: "Show me dollar amounts, not percentages." That single piece of feedback completely reframed how I thought about the project's output.</p>
+  <div class="highlight">
+    "Hearing that from a real user was more valuable than any design review. It reminded me that technical correctness and user value are not the same thing."
+  </div>
+
+  <h2>Building the Full Stack</h2>
+  <p>Going into this project I had backend experience but limited frontend work. Building the React dashboard end-to-end — login screen, stats cards, recommendations table, action buttons — forced me to think about the full picture of how a user would interact with the system.</p>
+  <p>The most instructive debugging session came from an account ID mismatch that caused recommendations to return zero results even when the scan was working perfectly. The scan was saving instances under one account ID while the recommendation generator was querying a different one. Finding the bug required building temporary debug endpoints, querying the database directly, and tracing data flow from the login form all the way to the database. It was tedious, but it taught me how to systematically debug a full-stack application rather than guessing.</p>
+  <p>I also made deliberate design decisions about the UI. My first version was visually complex with animations and a dark theme. I pulled it back to something simpler because I wanted the dollar savings number to be the first thing someone sees — not the interface.</p>
+
+  <h2>What I Would Do Differently</h2>
+  <p>If I started over, I would set up a test AWS account with running EC2 instances from day one. Most of my early development was done against empty responses because my test account had no running instances. That meant I couldn't catch bugs in the recommendation engine until very late, leading to a stressful debugging session right before the showcase.</p>
+  <p>I would also design the database schema more carefully upfront. Several late-stage bugs came from column name mismatches between what the recommendation service wrote and what the dashboard read. A more careful design pass at the start would have caught those inconsistencies early.</p>
+  <p>More broadly, I underestimated how much time real AWS integration takes. The SDK is well-documented, but connecting it to a real account with real permissions and real data surfaces a whole category of problems that don't exist in tutorials.</p>
+
+  <h2>Conclusion</h2>
+  <p>Cloud Cost Autopilot ended the quarter as a working full-stack application: a React frontend, a Node.js and Express backend, a PostgreSQL database, and a live AWS integration that scans real EC2 instances and returns real dollar savings estimates. That's more than I expected to accomplish in a single quarter.</p>
+  <p>What I'm most proud of is that the system works with actual AWS data. When I demo it and the dashboard shows "$8.47/month wasted" on a real instance ID from my AWS account, that's not a mock — it's the CloudWatch API, IAM role assumption, and a recommendation engine all working together.</p>
+  <p>In the second quarter I plan to add automatic 24-hour scheduled scans, email or Slack alerts when new waste is detected, and expand the engine to catch more waste types like oversized instances and unattached EBS volumes. More than anything, this project gave me the confidence that I can build something real with AWS — and that's exactly the kind of proof I wanted coming out of this capstone.</p>
+</div>
+
+<footer>CSS 497 Capstone · Jack Crelencia · University of Washington Bothell · Winter 2026</footer>
+
+</body>
+</html>
