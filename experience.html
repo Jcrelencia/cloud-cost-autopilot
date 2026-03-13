@@ -136,7 +136,7 @@
 
   <h2>Recommendation Engine</h2>
   <p>The recommendation engine is the core of the project. It queries the database for all running instances with less than 5% average CPU over the past 7 days, then calculates estimated monthly savings using a pricing table built from real AWS on-demand rates for us-east-2.</p>
-  <p>Early versions of the engine just flagged idle instances without attaching a dollar amount. After meeting with stakeholder Tyson Gong and hearing his feedback to show savings in dollars rather than percentages, the output was redesigned to lead with the monthly savings figure rather than the raw CPU number.</p>
+  <p>Early versions of the engine just flagged idle instances without attaching a dollar amount. After meeting with stakeholder and hearing his feedback to show savings in dollars rather than percentages, the output was redesigned to lead with the monthly savings figure rather than the raw CPU number.</p>
 
   <div class="artifact">
     <div class="artifact-label">Artifact — Savings Calculation</div>
@@ -169,7 +169,7 @@
   </div>
 
   <h2>Stakeholder Feedback</h2>
-  <p>I met with Tyson Gong, a founder running a startup on AWS, to gather feedback on the project direction. His most important comment was that the interface should lead with dollar amounts rather than technical metrics. He explained that his team doesn't think in terms of CPU percentages. They think in terms of how much their AWS bill costs each month and whether that number makes sense. That conversation shaped everything from the recommendation engine output to the layout of the dashboard.</p>
+  <p>I met with my stakeholder, a founder running a startup on AWS, to gather feedback on the project direction. His most important comment was that the interface should lead with dollar amounts rather than technical metrics. He explained that his team doesn't think in terms of CPU percentages. They think in terms of how much their AWS bill costs each month and whether that number makes sense. That conversation shaped everything from the recommendation engine output to the layout of the dashboard.</p>
 </div>
 
 <footer>CSS 497 Capstone · Jack Crelencia · University of Washington Bothell · Winter 2026</footer>
