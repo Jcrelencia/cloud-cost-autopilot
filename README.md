@@ -6,7 +6,7 @@
 
 ---
 
-## 📑 Portfolio Navigation
+##  Portfolio Navigation
 
 Explore my capstone project through these pages:
 
@@ -17,7 +17,7 @@ Explore my capstone project through these pages:
 
 ---
 
-## 🎯 Project Overview
+##  Project Overview
 
 Cloud Cost Autopilot is a backend system that connects to AWS accounts, scans EC2 instances, and identifies cost-saving opportunities by detecting idle or underutilized resources.
 
@@ -27,7 +27,7 @@ Cloud Cost Autopilot is a backend system that connects to AWS accounts, scans EC
 
 ---
 
-## 🛠️ Tech Stack
+##  Tech Stack
 
 - **Backend:** Node.js, Express
 - **Database:** PostgreSQL
@@ -36,24 +36,24 @@ Cloud Cost Autopilot is a backend system that connects to AWS accounts, scans EC
 
 ---
 
-## 🔗 Quick Links
+##  Quick Links
 
 - [GitHub Repository](https://github.com/yourusername/cloud-cost-autopilot) - View source code
 - [LinkedIn Profile](https://linkedin.com/in/yourprofile)
 
 ---
 
-## 📊 Key Features
+## Key Features
 
-✅ Secure AWS account connection via IAM roles  
-✅ EC2 instance scanning with CloudWatch metrics  
-✅ Idle resource detection (CPU < 5% threshold)  
-✅ Cost savings calculations  
-✅ PostgreSQL data persistence  
+ Secure AWS account connection via IAM roles  
+ EC2 instance scanning with CloudWatch metrics  
+ Idle resource detection (CPU < 5% threshold)  
+ Cost savings calculations  
+ PostgreSQL data persistence  
 
 ---
 
-## 👨‍💻 About This Project
+##  About This Project
 
 This capstone demonstrates:
 - Cloud security best practices (IAM roles, temporary credentials)
