@@ -80,7 +80,7 @@
   <h2>Building the Recommendation Engine</h2>
   <p>The core intellectual challenge of this project was translating a raw technical metric — CPU utilization percentage — into something a small business owner actually cares about: dollars. That translation is what the recommendation engine does.</p>
   <p>The logic is straightforward: pull each instance's seven-day average CPU, flag anything under 5% as idle, look up the instance type's hourly rate, multiply by 730 hours per month, and return estimated savings. But arriving at that design took iteration. Early on I was just flagging idle instances without any dollar amount attached.</p>
-  <p>When I met with my stakeholder Tyson Gong — who runs a small startup on AWS — his feedback was immediate: "Show me dollar amounts, not percentages." That single piece of feedback completely reframed how I thought about the project's output.</p>
+  <p>When I met with my stakeholder who runs a small startup on AWS; his feedback was immediate: "Show me dollar amounts, not percentages." That single piece of feedback completely reframed how I thought about the project's output.</p>
   <div class="highlight">
     "Hearing that from a real user was more valuable than any design review. It reminded me that technical correctness and user value are not the same thing."
   </div>
@@ -96,7 +96,7 @@
   <p>More broadly, I underestimated how much time real AWS integration takes. The SDK is well-documented, but connecting it to a real account with real permissions and real data surfaces a whole category of problems that don't exist in tutorials.</p>
 
   <h2>Conclusion</h2>
-  <p>Cloud Cost Autopilot ended the quarter as a working full-stack application: a React frontend, a Node.js and Express backend, a PostgreSQL database, and a live AWS integration that scans real EC2 instances and returns real dollar savings estimates. That's more than I expected to accomplish in a single quarter.</p>
+  <p>Cloud Cost Autopilot ended the quarter as a working full-stack application: a React frontend, a Node.js and Express backend, a PostgreSQL database, and a live AWS integration that scans real EC2 instances and returns real dollar savings estimates.</p>
   <p>What I'm most proud of is that the system works with actual AWS data. When I demo it and the dashboard shows "$8.47/month wasted" on a real instance ID from my AWS account, that's not a mock — it's the CloudWatch API, IAM role assumption, and a recommendation engine all working together.</p>
   <p>In the second quarter I plan to add automatic 24-hour scheduled scans, email or Slack alerts when new waste is detected, and expand the engine to catch more waste types like oversized instances and unattached EBS volumes. More than anything, this project gave me the confidence that I can build something real with AWS — and that's exactly the kind of proof I wanted coming out of this capstone.</p>
 </div>
