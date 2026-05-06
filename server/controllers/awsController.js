@@ -1,116 +1,261 @@
 const db = require('../config/database');
+const awsService = require('../services/awsService');
+const ec2Model = require('../models/ec2Model');
 
-// Connect AWS account
-exports.connectAccount = async (req, res) => {
+/**
+ * Connect AWS account (store IAM role ARN)
+ * POST /api/aws/connect
+ */
+async function connectAccount(req, res) {
+  const { accountName, roleArn, region = 'us-east-1' } = req.body;
+  const userId = req.user?.userId || 'test-user-id'; // Replace with real auth later
+
+  // Validate input
+  if (!accountName || !roleArn) {
+    return res.status(400).json({ error: 'accountName and roleArn are required' });
+  }
+
   try {
-    const { accessKeyId, secretAccessKey, userId } = req.body;
+    // Test connection first
+    console.log('Testing AWS connection...');
+    const testResult = await awsService.testConnection(roleArn, region);
+    
+    if (!testResult.success) {
+      return res.status(400).json({ 
+        error: 'Failed to connect to AWS account',
+        details: testResult.message
+      });
+    }
 
-    // TODO: In production, you should:
-    // 1. Validate the AWS credentials with AWS SDK
-    // 2. Encrypt the credentials before storing
-    // 3. Use AWS Secrets Manager for better security
-
+    // Save to database
     const query = `
-      INSERT INTO aws_accounts (user_id, account_name, aws_account_id, access_key_encrypted, created_at)
-      VALUES ($1, $2, $3, $4, NOW())
-      RETURNING account_id, user_id, created_at
+      INSERT INTO aws_accounts (user_id, account_name, aws_account_id, region, is_active, last_synced)
+      VALUES ($1, $2, $3, $4, $5, NOW())
+      RETURNING *;
     `;
     
-    // For now, we'll store both keys together in access_key_encrypted
-    // In production, these should be properly encrypted
-    const combinedKeys = JSON.stringify({ accessKeyId, secretAccessKey });
-    const values = [userId, 'Default Account', '000000000000', combinedKeys];
-    const result = await db.query(query, values);
-
+    const result = await db.query(query, [userId, accountName, roleArn, region, true]);
+    
     res.status(201).json({
-      status: 'success',
       message: 'AWS account connected successfully',
-      data: {
-        id: result.rows[0].account_id,
-        userId: result.rows[0].user_id,
-        connectedAt: result.rows[0].created_at
-      }
+      account: result.rows[0],
+      instanceCount: testResult.instanceCount,
     });
-
   } catch (error) {
     console.error('Error connecting AWS account:', error);
-    
-    // Handle duplicate entry error
-    if (error.code === '23505') {
-      return res.status(409).json({
-        status: 'error',
-        message: 'AWS account already connected for this user'
-      });
-    }
-
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to connect AWS account',
-      error: error.message
+    res.status(500).json({ 
+      error: 'Failed to connect AWS account',
+      details: error.message
     });
   }
-};
+}
 
-// Get all AWS accounts for a user
-exports.getAccounts = async (req, res) => {
+/**
+ * List connected AWS accounts
+ * GET /api/aws/accounts
+ */
+async function listAccounts(req, res) {
+  const userId = req.user?.userId || 'test-user-id';
+
   try {
-    const { userId } = req.params;
-
-    const query = `
-      SELECT account_id, user_id, account_name, created_at
-      FROM aws_accounts
-      WHERE user_id = $1
-      ORDER BY created_at DESC
-    `;
-    
+    const query = 'SELECT * FROM aws_accounts WHERE user_id = $1 ORDER BY created_at DESC;';
     const result = await db.query(query, [userId]);
-
-    res.json({
-      status: 'success',
-      data: result.rows.map(row => ({
-        id: row.account_id,
-        userId: row.user_id,
-        accountName: row.account_name,
-        connectedAt: row.created_at
-      }))
-    });
-
+    
+    res.json({ accounts: result.rows });
   } catch (error) {
-    console.error('Error fetching AWS accounts:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to fetch AWS accounts',
-      error: error.message
-    });
+    console.error('Error listing accounts:', error);
+    res.status(500).json({ error: 'Failed to list accounts' });
   }
-};
+}
 
-// Disconnect AWS account
-exports.disconnectAccount = async (req, res) => {
+/**
+ * Test AWS connection
+ * GET /api/aws/test-connection/:accountId
+ */
+async function testConnection(req, res) {
+  const { accountId } = req.params;
+
   try {
-    const { accountId } = req.params;
-
-    const query = 'DELETE FROM aws_accounts WHERE account_id = $1 RETURNING account_id';
+    const query = 'SELECT * FROM aws_accounts WHERE account_id = $1';
     const result = await db.query(query, [accountId]);
-
-    if (result.rowCount === 0) {
-      return res.status(404).json({
-        status: 'error',
-        message: 'AWS account not found'
-      });
+    
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Account not found' });
     }
 
+    const account = result.rows[0];
+    const testResult = await awsService.testConnection(account.aws_account_id, account.region);
+
+    if (testResult.success) {
+      res.json({
+        message: 'Connection successful',
+        instanceCount: testResult.instanceCount,
+        credentialsExpire: testResult.credentialsExpire,
+      });
+    } else {
+      res.status(400).json({
+        message: 'Connection failed',
+        error: testResult.message,
+      });
+    }
+  } catch (error) {
+    console.error('Error testing connection:', error);
+    res.status(500).json({ error: 'Connection test failed', details: error.message });
+  }
+}
+
+/**
+ * Scan EC2 instances and save to database
+ * POST /api/aws/scan/:accountId
+ */
+async function scanEC2(req, res) {
+  const { accountId } = req.params;
+
+  try {
+    // Get account details
+    const accountQuery = 'SELECT * FROM aws_accounts WHERE account_id = $1';
+    const accountResult = await db.query(accountQuery, [accountId]);
+    
+    if (accountResult.rows.length === 0) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+
+    const account = accountResult.rows[0];
+    
+    console.log(`Starting EC2 scan for account: ${account.account_name}`);
+    
+    // Step 1: Assume role and get credentials
+    const credentials = await awsService.assumeRole(account.aws_account_id, account.region);
+    
+    // Step 2: List all EC2 instances
+    const instances = await awsService.listEC2Instances(credentials, account.region);
+    
+    console.log(`Found ${instances.length} instances, fetching CPU metrics...`);
+    
+    // Step 3: For each instance, get CPU metrics and save to database
+    const savedInstances = [];
+    
+    for (const instance of instances) {
+      try {
+        // Get CPU utilization for this instance
+        const cpuMetrics = await awsService.getCPUUtilization(
+          credentials,
+          instance.instanceId,
+          account.region
+        );
+
+        // Prepare instance data for database
+        const instanceData = {
+          accountId: accountId,
+          instanceId: instance.instanceId,
+          instanceType: instance.instanceType,
+          state: instance.state,
+          region: account.region,
+          availabilityZone: instance.availabilityZone,
+          launchTime: instance.launchTime,
+          avgCpu: cpuMetrics.averageCPU,
+        };
+
+        // Save to database
+        const saved = await ec2Model.saveEC2Instance(instanceData);
+        savedInstances.push(saved);
+
+      } catch (error) {
+        console.error(`Failed to process instance ${instance.instanceId}:`, error.message);
+        // Continue with next instance even if one fails
+      }
+    }
+
+    // Update last_synced timestamp
+    await db.query(
+      'UPDATE aws_accounts SET last_synced = NOW() WHERE account_id = $1',
+      [accountId]
+    );
+
+    console.log(`✅ EC2 scan completed: ${savedInstances.length}/${instances.length} instances saved`);
+
     res.json({
-      status: 'success',
-      message: 'AWS account disconnected successfully'
+      message: 'EC2 scan completed successfully',
+      totalInstances: instances.length,
+      savedInstances: savedInstances.length,
+      instances: savedInstances,
     });
 
   } catch (error) {
-    console.error('Error disconnecting AWS account:', error);
-    res.status(500).json({
-      status: 'error',
-      message: 'Failed to disconnect AWS account',
-      error: error.message
+    console.error('Error scanning EC2:', error);
+    res.status(500).json({ 
+      error: 'EC2 scan failed', 
+      details: error.message 
     });
   }
+}
+
+/**
+ * Get EC2 instances for an account
+ * GET /api/aws/instances/:accountId
+ */
+async function getInstances(req, res) {
+  const { accountId } = req.params;
+
+  try {
+    const instances = await ec2Model.getEC2InstancesByAccount(accountId);
+    
+    res.json({
+      count: instances.length,
+      instances: instances,
+    });
+  } catch (error) {
+    console.error('Error getting instances:', error);
+    res.status(500).json({ error: 'Failed to get instances' });
+  }
+}
+
+/**
+ * Get idle EC2 instances
+ * GET /api/aws/instances/:accountId/idle
+ */
+async function getIdleInstances(req, res) {
+  const { accountId } = req.params;
+  const cpuThreshold = parseFloat(req.query.threshold) || 5.0;
+
+  try {
+    const idleInstances = await ec2Model.getIdleInstances(accountId, cpuThreshold);
+    
+    res.json({
+      count: idleInstances.length,
+      threshold: cpuThreshold,
+      instances: idleInstances,
+    });
+  } catch (error) {
+    console.error('Error getting idle instances:', error);
+    res.status(500).json({ error: 'Failed to get idle instances' });
+  }
+}
+
+/**
+ * Get account details including last_synced
+ * GET /api/aws/account/:accountId
+ */
+async function getAccount(req, res) {
+  const { accountId } = req.params;
+  try {
+    const result = await db.query('SELECT * FROM aws_accounts WHERE account_id = $1', [accountId]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Account not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error getting account:', error);
+    res.status(500).json({ error: 'Failed to get account' });
+  }
+}
+
+module.exports = {
+  connectAccount,
+  listAccounts,
+  testConnection,
+  scanEC2,
+  getInstances,
+  getIdleInstances,
+  getAccount,
 };

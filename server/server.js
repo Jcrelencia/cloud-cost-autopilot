@@ -2,9 +2,11 @@ const express = require('express');
 const cors = require('cors');
 const dotenv = require('dotenv');
 const db = require('./config/database');
+const { startScheduler } = require('./scheduler');
 
 // Import routes
 const awsRoutes = require('./routes/awsRoutes');
+const recommendationRoutes = require('./routes/recommendationRoutes');
 
 // Load environment variables
 dotenv.config();
@@ -51,6 +53,35 @@ app.get('/api/db-test', async (req, res) => {
 
 // API Routes
 app.use('/api/aws', awsRoutes);
+app.use('/api/recommendations', recommendationRoutes);
+
+app.get('/api/debug/instances', async (req, res) => {
+  const result = await db.query('SELECT instance_id, state, avg_cpu_7d, account_id FROM ec2_instances;');
+  res.json(result.rows);
+});
+
+app.get('/api/debug/clear', async (req, res) => {
+  await db.query('DELETE FROM recommendations;');
+  await db.query('DELETE FROM ec2_instances;');
+  await db.query('DELETE FROM aws_accounts;');
+  res.json({ message: 'Cleared all data' });
+});
+
+app.get('/api/debug/run-scan', async (req, res) => {
+  const { runScheduledScans } = require('./scheduler');
+  await runScheduledScans();
+  res.json({ message: 'Scheduled scan triggered manually' });
+});
+
+app.get('/api/debug/test-email', async (req, res) => {
+  const { sendIdleInstanceAlert } = require('./emailService');
+  const testRecs = [
+    { resource_name: 'i-0aaaa1ba6fbbe5e74', potential_savings: 8.47 },
+    { resource_name: 'i-0399ec22a28cb0ecc', potential_savings: 8.47 }
+  ];
+  await sendIdleInstanceAlert(testRecs, 'Jcrelencia');
+  res.json({ message: 'Test email triggered' });
+});
 
 // 404 handler
 app.use((req, res) => {
@@ -69,11 +100,15 @@ app.use((err, req, res, next) => {
   });
 });
 
+
 // Start server
+startScheduler();
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
   console.log(`Database test: http://localhost:${PORT}/api/db-test`);
 });
+
+
 
 module.exports = app;
