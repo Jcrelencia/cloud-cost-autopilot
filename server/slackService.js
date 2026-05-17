@@ -23,10 +23,11 @@ async function sendSlackAlert(recommendations, accountName) {
     const webhookUrl = process.env.SLACK_WEBHOOK_URL;
     if (!webhookUrl) { console.warn('[Slack] No webhook URL configured'); return; }
     const parsedUrl = new URL(webhookUrl);
+    const body = JSON.stringify(message); 
 
     const options = {
       hostname: parsedUrl.hostname,
-      path: parsedUrl.path,
+      path: parsedUrl.pathname,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
