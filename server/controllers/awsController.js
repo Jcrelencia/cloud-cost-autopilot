@@ -8,7 +8,7 @@ const ec2Model = require('../models/ec2Model');
  */
 async function connectAccount(req, res) {
   const { accountName, roleArn, region = 'us-east-1' } = req.body;
-  const userId = req.user?.userId || 'test-user-id'; // Replace with real auth later
+  const userId = req.user?.userId || null;
 
   // Validate input
   if (!accountName || !roleArn) {
@@ -28,13 +28,13 @@ async function connectAccount(req, res) {
     }
 
     // Save to database
-    const query = `
-      INSERT INTO aws_accounts (user_id, account_name, aws_account_id, region, is_active, last_synced)
-      VALUES ($1, $2, $3, $4, $5, NOW())
-      RETURNING *;
-    `;
-    
-    const result = await db.query(query, [userId, accountName, roleArn, region, true]);
+  const query = `
+  INSERT INTO aws_accounts (user_id, account_name, aws_account_id, region, is_active, last_synced)
+  VALUES ($1, $2, $3, $4, $5, NOW())
+  RETURNING *;
+`;
+
+const result = await db.query(query, [userId, accountName, roleArn, region, true]);
     
     res.status(201).json({
       message: 'AWS account connected successfully',
