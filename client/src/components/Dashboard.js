@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import './Dashboard.css';
 
+const API = 'https://cloud-cost-autopilot-server.onrender.com';
+
 export default function Dashboard({ accountId, accountName, onLogout }) {
   const [recommendations, setRecommendations] = useState([]);
   const [totalSavings, setTotalSavings] = useState(0);
@@ -18,7 +20,7 @@ export default function Dashboard({ accountId, accountName, onLogout }) {
 
   async function fetchLastSynced() {
     try {
-      const res = await fetch(`https://cloud-cost-autopilot-server.onrender.com${accountId}`);
+      const res = await fetch(`${API}/api/aws/account/${accountId}`);
       const data = await res.json();
       if (res.ok && data.last_synced) {
         setLastSynced(new Date(data.last_synced).toLocaleString());
@@ -31,7 +33,7 @@ export default function Dashboard({ accountId, accountName, onLogout }) {
   async function fetchRecommendations() {
     setLoading(true);
     try {
-      const res = await fetch(`https://cloud-cost-autopilot-server.onrender.com${accountId}`);
+      const res = await fetch(`${API}/api/recommendations/${accountId}`);
       const data = await res.json();
       if (res.ok) {
         setRecommendations(data.recommendations || []);
@@ -51,11 +53,11 @@ export default function Dashboard({ accountId, accountName, onLogout }) {
     setError('');
     setStatusMsg('Scanning EC2 instances...');
     try {
-      const res = await fetch(`https://cloud-cost-autopilot-server.onrender.com${accountId}`, { method: 'POST' });
+      const res = await fetch(`${API}/api/aws/scan/${accountId}`, { method: 'POST' });
       const data = await res.json();
       if (res.ok) {
         setStatusMsg(`Found ${data.totalInstances} instances. Generating recommendations...`);
-        const res2 = await fetch(`https://cloud-cost-autopilot-server.onrender.com${accountId}`, { method: 'POST' });
+        const res2 = await fetch(`${API}/api/recommendations/generate/${accountId}`, { method: 'POST' });
         const data2 = await res2.json();
         if (res2.ok) {
           setRecommendations(data2.recommendations || []);
@@ -81,7 +83,7 @@ export default function Dashboard({ accountId, accountName, onLogout }) {
 
   async function updateStatus(id, status) {
     try {
-      await fetch(`https://cloud-cost-autopilot-server.onrender.com${id}`, {
+      await fetch(`${API}/api/recommendations/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status }),

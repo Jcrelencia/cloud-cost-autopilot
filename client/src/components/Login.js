@@ -20,7 +20,7 @@ function Login({ onLoginSuccess }) {
     setLoading(true);
     setError('');
     try {
-      const response = await fetch('https://cloud-cost-autopilot-server.onrender.com', {
+      const response = await fetch('https://cloud-cost-autopilot-server.onrender.com/api/aws/connect', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(formData),
