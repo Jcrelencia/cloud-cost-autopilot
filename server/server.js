@@ -86,6 +86,68 @@ app.get('/api/debug/test-email', async (req, res) => {
   res.json({ message: 'Test email triggered' });
 });
 
+app.get('/api/setup-db', async (req, res) => {
+  try {
+    await db.query(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS users (
+        user_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        email VARCHAR(255) UNIQUE NOT NULL,
+        password_hash VARCHAR(255) NOT NULL,
+        first_name VARCHAR(100),
+        last_name VARCHAR(100),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS aws_accounts (
+        account_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        user_id UUID,
+        account_name VARCHAR(255) NOT NULL,
+        aws_account_id VARCHAR(255) NOT NULL,
+        region VARCHAR(50) DEFAULT 'us-east-1',
+        is_active BOOLEAN DEFAULT true,
+        last_synced TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS ec2_instances (
+        instance_id VARCHAR(50),
+        account_id UUID,
+        instance_type VARCHAR(50),
+        state VARCHAR(20),
+        region VARCHAR(50),
+        availability_zone VARCHAR(50),
+        launch_time TIMESTAMP,
+        avg_cpu_7d DECIMAL(5,2) DEFAULT 0,
+        max_cpu_7d DECIMAL(5,2) DEFAULT 0,
+        last_scanned TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        PRIMARY KEY (instance_id, account_id)
+      );
+    `);
+    await db.query(`
+      CREATE TABLE IF NOT EXISTS recommendations (
+        recommendation_id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+        account_id UUID,
+        recommendation_type VARCHAR(50) NOT NULL,
+        resource_name VARCHAR(255),
+        service_name VARCHAR(100),
+        potential_savings DECIMAL(10,2),
+        description TEXT,
+        status VARCHAR(20) DEFAULT 'pending',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      );
+    `);
+    res.json({ message: 'Database setup complete' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({
