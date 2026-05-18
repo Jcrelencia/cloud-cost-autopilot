@@ -30,7 +30,7 @@ async function saveEC2Instance(instanceData) {
       last_scanned
     )
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, NOW())
-    ON CONFLICT (instance_id) 
+    ON CONFLICT (instance_id, account_id)
     DO UPDATE SET 
       instance_type = EXCLUDED.instance_type,
       state = EXCLUDED.state,
