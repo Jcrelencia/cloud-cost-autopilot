@@ -4,17 +4,14 @@ const dotenv = require('dotenv');
 const db = require('./config/database');
 const { startScheduler } = require('./scheduler');
 
-// Import routes
 const awsRoutes = require('./routes/awsRoutes');
 const recommendationRoutes = require('./routes/recommendationRoutes');
 
-// Load environment variables
 dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
 
-// Middleware
 app.use(cors({
   origin: ['https://cloud-cost-autopilot.vercel.app', 'http://localhost:3000'],
   credentials: true
@@ -22,13 +19,11 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Request logging middleware
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.path}`);
   next();
 });
 
-// Routes
 app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'ok', 
@@ -54,7 +49,6 @@ app.get('/api/db-test', async (req, res) => {
   }
 });
 
-// API Routes
 app.use('/api/aws', awsRoutes);
 app.use('/api/recommendations', recommendationRoutes);
 
@@ -113,8 +107,9 @@ app.get('/api/setup-db', async (req, res) => {
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       );
     `);
+    await db.query(`DROP TABLE IF EXISTS ec2_instances;`);
     await db.query(`
-      CREATE TABLE IF NOT EXISTS ec2_instances (
+      CREATE TABLE ec2_instances (
         instance_id VARCHAR(50),
         account_id UUID,
         instance_type VARCHAR(50),
@@ -125,6 +120,8 @@ app.get('/api/setup-db', async (req, res) => {
         avg_cpu_7d DECIMAL(5,2) DEFAULT 0,
         max_cpu_7d DECIMAL(5,2) DEFAULT 0,
         last_scanned TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         PRIMARY KEY (instance_id, account_id)
       );
     `);
@@ -148,7 +145,6 @@ app.get('/api/setup-db', async (req, res) => {
   }
 });
 
-// 404 handler
 app.use((req, res) => {
   res.status(404).json({
     status: 'error',
@@ -156,7 +152,6 @@ app.use((req, res) => {
   });
 });
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err);
   res.status(err.status || 500).json({
@@ -165,15 +160,11 @@ app.use((err, req, res, next) => {
   });
 });
 
-
-// Start server
 startScheduler();
 app.listen(PORT, () => {
   console.log(`Server is running on port ${PORT}`);
   console.log(`Health check: http://localhost:${PORT}/api/health`);
   console.log(`Database test: http://localhost:${PORT}/api/db-test`);
 });
-
-
 
 module.exports = app;
